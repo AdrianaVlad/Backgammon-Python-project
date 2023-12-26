@@ -10,6 +10,8 @@ features:
 - show selected 'column' (meaning: piece at the top of the 'triangle'/space* will move on next valid click)
 - deselect piece button (so you don't get stuck)
 - stack pieces on space if > 5 (so they don't overlap with the space below/above)
+
+
 TODO:
 - double dice: ex: if player rolls '3 3' they can move 3 spaces 4 times
 - taking pieces functionality
