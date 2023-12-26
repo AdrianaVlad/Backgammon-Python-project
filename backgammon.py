@@ -2,17 +2,18 @@ import tkinter as tk
 import tkinter.font as tkf
 import random
 
+
 class BackgammonBoard:
     def __init__(self, canvas, turn_label):
-        self.turn_label=turn_label
+        self.turn_label = turn_label
         self.canvas = canvas
         self.piece_radius = 35
-        self.columns = [[0,0,0,0]] * 24
-        self.selected_piece = 0
-        self.base_x = 50  # was 50
-        self.base_y = 50  # was 150
+        self.columns = [[0, 0, 0, 0]] * 24
+        self.selected_piece = None
+        self.base_x = 50
+        self.base_y = 50
         self.turn = 1
-        self.dice = [0, 0]
+        self.dice = []
         for i in range(6):
             x_left = self.base_x + 35 + i * 105
             x_right = x_left + 95
@@ -39,32 +40,32 @@ class BackgammonBoard:
         for i, column in enumerate(self.columns):
             for j in range(column[2]):
                 if i < 12:
-                    self.draw_piece(column[0], column[1] + 2 * j * self.piece_radius + self.piece_radius, "#ebddd1")
+                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] + 2 * (j % 5) * self.piece_radius + self.piece_radius, "#ebddd1")
                 else:
-                    self.draw_piece(column[0], column[1] - 2 * j * self.piece_radius - self.piece_radius, "#ebddd1")
+                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] - 2 * (j % 5) * self.piece_radius - self.piece_radius, "#ebddd1")
             for j in range(column[3]):
                 if i < 12:
-                    self.draw_piece(column[0], column[1] + 2 * j * self.piece_radius + self.piece_radius, "#25190e")
+                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] + 2 * (j % 5) * self.piece_radius + self.piece_radius, "#25190e")
                 else:
-                    self.draw_piece(column[0], column[1] - 2 * j * self.piece_radius - self.piece_radius, "#25190e")
+                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] - 2 * (j % 5) * self.piece_radius - self.piece_radius, "#25190e")
 
     def handle_click(self, event):
         clicked_x, clicked_y = event.x, event.y
         clicked_column = self.get_clicked_column(clicked_x, clicked_y)
-        if self.selected_piece is None:
-            if self.columns[clicked_column][self.turn+1] > 0:
-                self.selected_piece = clicked_column
-                self.turn_label.config(text=f"Player {self.turn}'s Turn. Selected col {clicked_column}")
-        else:
-            if self.valid_move(clicked_column):
-                self.columns[self.selected_piece][self.turn+1] -= 1
-                self.columns[clicked_column][self.turn+1] += 1
-                self.selected_piece = None
-                if len(self.dice) == 0:
-                    self.turn = self.turn % 2 + 1
-                    turn_text = f"Player {self.turn}'s Turn"
-                    self.turn_label.config(text=turn_text)
-        self.redraw_board()
+        if len(self.dice) > 0:
+            if self.selected_piece is None:
+                if self.columns[clicked_column][self.turn+1] > 0:
+                    self.selected_piece = clicked_column
+                    self.turn_label.config(text=f"Player {self.turn}'s Turn. Selected col {clicked_column}")
+            else:
+                if self.valid_move(clicked_column):
+                    self.columns[self.selected_piece][self.turn+1] -= 1
+                    self.columns[clicked_column][self.turn+1] += 1
+                    self.selected_piece = None
+                    if len(self.dice) == 0:
+                        self.turn = self.turn % 2 + 1
+                    self.turn_label.config(text=f"Player {self.turn}'s Turn")
+            self.redraw_board()
 
     def valid_move(self, clicked_column):
         if self.turn == 1:
@@ -84,17 +85,18 @@ class BackgammonBoard:
                 return True
             return False
 
-
     def redraw_board(self):
         self.canvas.delete("all")
         self.draw_board()
         self.place_pieces()
 
     def draw_board(self):
-        self.canvas.create_rectangle(self.base_x, self.base_y, self.base_x + 1400, self.base_y + 800, outline="#654426", fill="#90663f")
-        self.canvas.create_rectangle(self.base_x + 30, self.base_y + 30, self.base_x + 660, self.base_y + 770, outline="#654426", fill="#c9a583")
-        self.canvas.create_rectangle(self.base_x + 740, self.base_y + 30, self.base_x + 1370, self.base_y + 770, outline="#654426",
-                                fill="#c9a583")
+        self.canvas.create_rectangle(self.base_x, self.base_y, self.base_x + 1400, self.base_y + 800,
+                                     outline="#654426", fill="#90663f")
+        self.canvas.create_rectangle(self.base_x + 30, self.base_y + 30, self.base_x + 660, self.base_y + 770,
+                                     outline="#654426", fill="#c9a583")
+        self.canvas.create_rectangle(self.base_x + 740, self.base_y + 30, self.base_x + 1370, self.base_y + 770,
+                                     outline="#654426", fill="#c9a583")
         for i in range(6):
             x_left = self.base_x + 35 + i * 105
             x_right = x_left + 95
@@ -116,7 +118,7 @@ class BackgammonBoard:
             self.canvas.create_polygon(x_left, y_bottom_base, x_right, y_bottom_base, (x_left + x_right) / 2, y_bottom_tip,
                                        outline="#654426", fill=fill_color_bottom)
             self.canvas.create_polygon(x_left + 710, y_bottom_base, x_right + 710, y_bottom_base,
-                                      (x_left + x_right) / 2 + 710, y_bottom_tip, outline="#654426", fill=fill_color_bottom)
+                                       (x_left + x_right) / 2 + 710, y_bottom_tip, outline="#654426", fill=fill_color_bottom)
 
     def get_clicked_column(self, x_coord, y_coord):
         if self.base_y+30 < y_coord < self.base_y + 370:
@@ -131,11 +133,15 @@ class BackgammonBoard:
 
 
 def roll_dice(result_label, backgammon_board):
-    dice_value_1 = random.randint(1, 6)
-    dice_value_2 = random.randint(1, 6)
-    result_label.config(text=f"{dice_value_1}, {dice_value_2}", font=("Eras Medium ITC", 50))
-    backgammon_board.dice = [dice_value_1, dice_value_2]
+    if len(backgammon_board.dice) == 0:
+        dice_value_1 = random.randint(1, 6)
+        dice_value_2 = random.randint(1, 6)
+        result_label.config(text=f"{dice_value_1}, {dice_value_2}", font=("Eras Medium ITC", 50))
+        backgammon_board.dice = [dice_value_1, dice_value_2]
 
+def deselect_piece(backgammon_board):
+    backgammon_board.selected_piece = None
+    backgammon_board.turn_label.config(text=f"Player {backgammon_board.turn}'s Turn")
 
 def start_game(game_mode, start_menu, root):
     start_menu.destroy()
@@ -163,13 +169,15 @@ def start_game(game_mode, start_menu, root):
     borne_label = tk.Label(borne_off_frame, text="Borne:", bg="#f5eee8", fg="#654426",
                            font=("Eras Medium ITC", 25))
     borne_label.pack(pady=(300, 10), padx=50)
-
     light_count_label = tk.Label(borne_off_frame, text="W x 0", bg="#f5eee8", fg="#654426",
                                  font=("Eras Medium ITC", 20))
     light_count_label.pack(pady=5)
     dark_count_label = tk.Label(borne_off_frame, text="B x 0", bg="#f5eee8", fg="#654426",
                                 font=("Eras Medium ITC", 20))
     dark_count_label.pack(pady=5)
+    deselect_button = tk.Button(borne_off_frame, text="Deselect piece", bg="#f5eee8", fg="#654426",
+                            command=lambda: deselect_piece(backgammon_board), font=("Eras Medium ITC", 20))
+    deselect_button.pack(pady=10)
 
     canvas = tk.Canvas(game_window, bg="#f5eee8", highlightthickness=0)
     canvas.pack(expand=True, fill=tk.BOTH)
