@@ -1,6 +1,6 @@
 # Backgammon-Python-project
 
-features:
+Features:
 - local coop (2 players) or vs AI (1 player)
 - display whose turn it is
 - display dice rolls
@@ -10,10 +10,12 @@ features:
 - show selected 'column' (meaning: piece at the top of the 'triangle'/space* will move on next valid click)
 - deselect piece button (so you don't get stuck)
 - stack pieces on space if > 5 (so they don't overlap with the space below/above)
+- double dice: ex: if player rolls '3 3' they can move 3 spaces 4 times
+- roll to determine who goes first (still, player 1 will play white and 2 black, but now player 1 always goes first)
 
 
 TODO:
-- double dice: ex: if player rolls '3 3' they can move 3 spaces 4 times
+
 - taking pieces functionality
 	- place your piece if only one opponent piece on space
 	- place taken piece in the middle of the board
@@ -29,7 +31,6 @@ TODO:
 	- on player 2 turn
 	- automatically roll dice 
 	- make (any) valid moves until all moves are used
- - roll to determine who goes first (still, player 1 will play white and 2 black, but now player 1 always goes first)
-
+- documentation
 
 *note: top right is indexed 0, top left 11, bottom left 12, bottom right 23 (so move order from white POV)
