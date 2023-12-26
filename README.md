@@ -29,6 +29,7 @@ TODO:
 	- on player 2 turn
 	- automatically roll dice 
 	- make (any) valid moves until all moves are used
+ - roll to determine who goes first (still, player 1 will play white and 2 black, but now player 1 always goes first)
 
 
 *note: top right is indexed 0, top left 11, bottom left 12, bottom right 23 (so move order from white POV)
