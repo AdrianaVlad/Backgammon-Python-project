@@ -4,6 +4,7 @@ import random
 import threading
 import time
 
+
 class AIPlayer:
     def __init__(self, backgammon_board, result_label):
         self.backgammon_board = backgammon_board
@@ -21,6 +22,7 @@ class AIPlayer:
     def roll_dice(self):
         time.sleep(1)
         roll_dice(self.result_label, self.backgammon_board)
+
     def make_move(self):
         move = self.backgammon_board.valid_move_exists()
         time.sleep(1)
@@ -67,7 +69,7 @@ class BackgammonBoard:
             self.columns[16][2] = 3
             self.columns[18][2] = 5
             self.columns[23][3] = 2
-        self.columns[24] = [self.base_x+700, self.base_y +400, 0 , 0]
+        self.columns[24] = [self.base_x+700, self.base_y + 400, 0, 0]
 
     def draw_piece(self, x, y, color):
         self.canvas.create_oval(x - self.piece_radius, y - self.piece_radius,
@@ -107,8 +109,8 @@ class BackgammonBoard:
                 if self.selected_piece is None:
                     if (clicked_column is not None and self.columns[clicked_column][self.turn + 1] > 0 and
                             (self.columns[24][self.turn+1] == 0 or clicked_column == 24)):
-                            self.selected_piece = clicked_column
-                            self.turn_label.config(text=f"Player {self.turn}'s Turn. Selected col {clicked_column}")
+                        self.selected_piece = clicked_column
+                        self.turn_label.config(text=f"Player {self.turn}'s Turn. Selected col {clicked_column}")
                 else:
                     valid = self.valid_move(clicked_column, self.selected_piece)
                     if valid[0]:
@@ -207,8 +209,6 @@ class BackgammonBoard:
                         return True, None, i
         return False, None, None
 
-
-
     def redraw_board(self):
         self.canvas.delete("all")
         self.draw_board()
@@ -237,12 +237,13 @@ class BackgammonBoard:
                 fill_color_bottom = "#654426"
             self.canvas.create_polygon(x_left, y_top_base, x_right, y_top_base, (x_left + x_right) / 2, y_top_tip,
                                        outline="#654426", fill=fill_color_top)
-            self.canvas.create_polygon(x_left + 710, y_top_base, x_right + 710, y_top_base, (x_left + x_right) / 2 + 710,
-                                       y_top_tip, outline="#654426", fill=fill_color_top)
-            self.canvas.create_polygon(x_left, y_bottom_base, x_right, y_bottom_base, (x_left + x_right) / 2, y_bottom_tip,
-                                       outline="#654426", fill=fill_color_bottom)
+            self.canvas.create_polygon(x_left + 710, y_top_base, x_right + 710, y_top_base, (x_left + x_right) / 2 +
+                                       710, y_top_tip, outline="#654426", fill=fill_color_top)
+            self.canvas.create_polygon(x_left, y_bottom_base, x_right, y_bottom_base, (x_left + x_right) / 2,
+                                       y_bottom_tip, outline="#654426", fill=fill_color_bottom)
             self.canvas.create_polygon(x_left + 710, y_bottom_base, x_right + 710, y_bottom_base,
-                                       (x_left + x_right) / 2 + 710, y_bottom_tip, outline="#654426", fill=fill_color_bottom)
+                                       (x_left + x_right) / 2 + 710, y_bottom_tip, outline="#654426",
+                                       fill=fill_color_bottom)
 
     def get_clicked_column(self, x_coord, y_coord):
         if self.base_y+30 <= y_coord <= self.base_y + 400:
@@ -270,13 +271,15 @@ def roll_dice(result_label, backgammon_board):
         else:
             backgammon_board.dice = [dice_value_1, dice_value_2]
 
+
 def roll_turn(result_label, player_nr):
     if len(result_label.cget("text")) <= 10:
         dice_value_1 = random.randint(1, 6)
         dice_value_2 = random.randint(1, 6)
         result_label.config(text=f"Player {player_nr}: {dice_value_1}, {dice_value_2}", font=("Eras Medium ITC", 50))
 
-def check_who_starts(result_label_1, result_label_2, winner_label, root, dice_frame, game_mode):
+
+def check_who_starts(result_label_1, result_label_2, winner_label, dice_frame, game_mode):
     if len(result_label_1.cget("text")) > 10 and len(result_label_2.cget("text")) > 10:
         rolls_1 = []
         for i in result_label_1.cget("text"):
@@ -299,9 +302,11 @@ def check_who_starts(result_label_1, result_label_2, winner_label, root, dice_fr
             winner_label.config(text=f"Player {winner} wins!")
             root.after(3000, lambda: start_game(game_mode, dice_frame, winner))
 
+
 def deselect_piece(backgammon_board):
     backgammon_board.selected_piece = None
     backgammon_board.turn_label.config(text=f"Player {backgammon_board.turn}'s Turn")
+
 
 def win_screen(game_window, winner):
     game_window.destroy()
@@ -314,8 +319,9 @@ def win_screen(game_window, winner):
                             command=lambda: create_start_menu(win_frame), font=("Eras Medium ITC", 35))
     back_button.pack()
 
-def start_game(game_mode, preliminary_rolls, starting_player):
-    preliminary_rolls.destroy()
+
+def start_game(game_mode, preliminary_frame, starting_player):
+    preliminary_frame.destroy()
     game_window = tk.Frame(root, bg="#f5eee8")
     game_window.pack(fill=tk.BOTH, expand=True)
 
@@ -347,7 +353,7 @@ def start_game(game_mode, preliminary_rolls, starting_player):
                                 font=("Eras Medium ITC", 20))
     dark_count_label.pack(pady=5)
     deselect_button = tk.Button(borne_off_frame, text="Deselect piece", bg="#f5eee8", fg="#654426",
-                            command=lambda: deselect_piece(backgammon_board), font=("Eras Medium ITC", 20))
+                                command=lambda: deselect_piece(backgammon_board), font=("Eras Medium ITC", 20))
     deselect_button.pack(pady=10)
 
     canvas = tk.Canvas(game_window, bg="#f5eee8", highlightthickness=0)
@@ -358,8 +364,8 @@ def start_game(game_mode, preliminary_rolls, starting_player):
     backgammon_board.draw_board()
     backgammon_board.place_pieces()
     if game_mode == 1:
-        AI_player = AIPlayer(backgammon_board, result_label)
-        AI_player.start_ai_thread()
+        ai_player = AIPlayer(backgammon_board, result_label)
+        ai_player.start_ai_thread()
 
 
 def preliminary_rolls(game_mode, start_menu):
@@ -370,29 +376,27 @@ def preliminary_rolls(game_mode, start_menu):
                            font=("Eras Medium ITC", 35))
     title_label.pack(pady=100)
     winner_label = tk.Label(dice_frame, text="", bg="#654426", fg="#f5eee8",
-                           font=("Eras Medium ITC", 25))
+                            font=("Eras Medium ITC", 25))
     winner_label.pack(pady=20)
     result_label_1 = tk.Label(dice_frame, text="Player1: ", bg="#654426", fg="#f5eee8", font=("Eras Medium ITC", 50))
     result_label_1.pack(pady=10)
     roll_button_1 = tk.Button(dice_frame, text="Roll Dice", bg="#90663f", fg="#f5eee8",
-                            command=lambda: (roll_turn(result_label_1, 1),
-                                             check_who_starts(result_label_1, result_label_2, winner_label, root,
-                                                              dice_frame, game_mode)),
-                                             font=("Eras Medium ITC", 20))
+                              command=lambda: (roll_turn(result_label_1, 1),
+                                               check_who_starts(result_label_1, result_label_2, winner_label,
+                                                                dice_frame, game_mode)),
+                              font=("Eras Medium ITC", 20))
     roll_button_1.pack(pady=10)
     result_label_2 = tk.Label(dice_frame, text="Player2: ", bg="#654426", fg="#f5eee8", font=("Eras Medium ITC", 50))
     result_label_2.pack(pady=10)
     if game_mode == 2:
         roll_button_2 = tk.Button(dice_frame, text="Roll Dice", bg="#90663f", fg="#f5eee8",
                                   command=lambda: (roll_turn(result_label_2, 2),
-                                                   check_who_starts(result_label_1, result_label_2, winner_label, root,
+                                                   check_who_starts(result_label_1, result_label_2, winner_label,
                                                                     dice_frame, game_mode)),
-                                                   font=("Eras Medium ITC", 20))
+                                  font=("Eras Medium ITC", 20))
         roll_button_2.pack(pady=10)
     else:
         roll_turn(result_label_2, 2)
-
-
 
 
 def create_start_menu(win_frame):
