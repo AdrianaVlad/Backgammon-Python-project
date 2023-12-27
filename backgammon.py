@@ -69,92 +69,111 @@ class BackgammonBoard:
         clicked_x, clicked_y = event.x, event.y
         clicked_column = self.get_clicked_column(clicked_x, clicked_y)
         if len(self.dice) > 0:
-            if self.selected_piece is None:
-                if (clicked_column is not None and self.columns[clicked_column][self.turn + 1] > 0 and
-                        (self.columns[24][self.turn+1] == 0 or clicked_column == 24)):
-                        self.selected_piece = clicked_column
-                        self.turn_label.config(text=f"Player {self.turn}'s Turn. Selected col {clicked_column}")
-            else:
-                if self.valid_move(clicked_column):
-                    if clicked_column is None:
-                        if self.turn == 1:
-                            self.light_count += 1
-                            self.light_count_label.config(text=f"W x {self.light_count}")
-                            if self.light_count == 15:
-                                root.after(1000, lambda: win_screen(self.game_window, 1))
+            if self.valid_move_exists():
+                if self.selected_piece is None:
+                    if (clicked_column is not None and self.columns[clicked_column][self.turn + 1] > 0 and
+                            (self.columns[24][self.turn+1] == 0 or clicked_column == 24)):
+                            self.selected_piece = clicked_column
+                            self.turn_label.config(text=f"Player {self.turn}'s Turn. Selected col {clicked_column}")
+                else:
+                    valid = self.valid_move(clicked_column, self.selected_piece)
+                    if valid[0]:
+                        self.dice.remove(valid[1])
+                        if clicked_column is None:
+                            if self.turn == 1:
+                                self.light_count += 1
+                                self.light_count_label.config(text=f"W x {self.light_count}")
+                                if self.light_count == 15:
+                                    root.after(1000, lambda: win_screen(self.game_window, 1))
+                            else:
+                                self.dark_count += 1
+                                self.dark_count_label.config(text=f"B x {self.dark_count}")
+                                if self.dark_count == 15:
+                                    root.after(1000, lambda: win_screen(self.game_window, 2))
                         else:
-                            self.dark_count += 1
-                            self.dark_count_label.config(text=f"B x {self.dark_count}")
-                            if self.dark_count == 15:
-                                root.after(1000, lambda: win_screen(self.game_window, 2))
-                    else:
-                        if self.turn == 1 and self.columns[clicked_column][3] == 1:
-                            self.columns[clicked_column][3] = 0
-                            self.columns[24][3] += 1
-                        elif self.turn == 2 and self.columns[clicked_column][2] == 1:
-                            self.columns[clicked_column][2] = 0
-                            self.columns[24][2] += 1
-                        self.columns[clicked_column][self.turn+1] += 1
-                    self.columns[self.selected_piece][self.turn + 1] -= 1
-                    self.selected_piece = None
-                    if len(self.dice) == 0:
-                        self.turn = self.turn % 2 + 1
-                    self.turn_label.config(text=f"Player {self.turn}'s Turn")
-            self.redraw_board()
+                            if self.turn == 1 and self.columns[clicked_column][3] == 1:
+                                self.columns[clicked_column][3] = 0
+                                self.columns[24][3] += 1
+                            elif self.turn == 2 and self.columns[clicked_column][2] == 1:
+                                self.columns[clicked_column][2] = 0
+                                self.columns[24][2] += 1
+                            self.columns[clicked_column][self.turn+1] += 1
+                        self.columns[self.selected_piece][self.turn + 1] -= 1
+                        self.selected_piece = None
+                        if len(self.dice) == 0:
+                            self.turn = self.turn % 2 + 1
+                        self.turn_label.config(text=f"Player {self.turn}'s Turn")
+                self.redraw_board()
+            else:
+                self.selected_piece = None
+                self.dice = []
+                self.turn = self.turn % 2 + 1
+                self.turn_label.config(text=f"No more valid moves! Player {self.turn}'s Turn")
 
-    def valid_move(self, clicked_column):
+    def valid_move(self, clicked_column, selected_piece):
         if clicked_column is None:
             if self.turn == 1:
                 for i in range(18):
                     if self.columns[i][2] != 0:
-                        return False
+                        return False, None
             else:
                 for i in range(18):
                     if self.columns[i+6][3] != 0:
-                        return False
+                        return False, None
         if clicked_column == 24:
-            return False
+            return False, None
         if self.turn == 1:
             if clicked_column is not None and self.columns[clicked_column][3] > 1:
-                return False
+                return False, None
             if clicked_column is None:
-                if 24 - self.selected_piece in self.dice:
-                    self.dice.remove(24 - self.selected_piece)
-                    return True
-                for i in range(24 - self.selected_piece, 6):
+                if 24 - selected_piece in self.dice:
+                    return True, 24 - selected_piece
+                for i in range(24 - selected_piece, 6):
                     if self.columns[23-i][2] != 0:
-                        return False
+                        return False, None
                 max_dice = max(self.dice)
-                if max_dice > 24 - self.selected_piece:
-                    self.dice.remove(max_dice)
-                    return True
-                return False
-            move = clicked_column - self.selected_piece % 24 + self.selected_piece // 24
+                if max_dice > 24 - selected_piece:
+                    return True, max_dice
+                return False, None
+            move = clicked_column - selected_piece % 24 + selected_piece // 24
             if move in self.dice:
-                self.dice.remove(move)
-                return True
-            return False
+                return True, move
+            return False, None
         else:
             if clicked_column is not None and self.columns[clicked_column][2] > 1:
-                return False
+                return False, None
             if clicked_column is None:
-                if self.selected_piece+1 in self.dice:
-                    self.dice.remove(self.selected_piece+1)
-                    return True
-                for i in range(self.selected_piece+1, 6):
+                if selected_piece+1 in self.dice:
+                    return True, selected_piece+1
+                for i in range(selected_piece+1, 6):
                     if self.columns[i][3] != 0:
-                        return False
+                        return False, None
                 max_dice = max(self.dice)
-                if max_dice > self.selected_piece+1:
-                    self.dice.remove(max_dice)
-                    return True
-                return False
+                if max_dice > selected_piece+1:
+                    return True, max_dice
+                return False, None
             else:
-                move = self.selected_piece - clicked_column
+                move = selected_piece - clicked_column
                 if move in self.dice:
-                    self.dice.remove(move)
+                    return True, move
+            return False, None
+
+    def valid_move_exists(self):
+        if self.columns[24][self.turn+1] != 0:
+            for i in range(24):
+                if self.valid_move(i, 24)[1]:
                     return True
-            return False
+        else:
+            for i in range(24):
+                if self.columns[i][self.turn+1] != 0:
+                    for j in range(24):
+                        if self.valid_move(j, i):
+                            return True
+                    if self.valid_move(None, i)[1]:
+                        return True
+        return False
+
+
 
     def redraw_board(self):
         self.canvas.delete("all")
@@ -218,7 +237,7 @@ def roll_dice(result_label, backgammon_board):
             backgammon_board.dice = [dice_value_1, dice_value_2]
 
 def roll_turn(result_label, player_nr):
-    if len(result_label.cget("text")) < 10:
+    if len(result_label.cget("text")) <= 10:
         dice_value_1 = random.randint(1, 6)
         dice_value_2 = random.randint(1, 6)
         result_label.config(text=f"Player {player_nr}: {dice_value_1}, {dice_value_2}", font=("Eras Medium ITC", 50))

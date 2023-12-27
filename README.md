@@ -23,11 +23,11 @@ Features:
 	- can make 'normal' moves from higher pieces if the column coresponding to the dice roll is empty
 	- if column empty but no higher pieces, can only remove highest lower piece(s) (using highest dice roll)
 - win functionality:
-	- if all pieces borne off, display winner
+	- if a player bears off all pieces, display winner
 	- back to main menu button on win screen
+- if no (more) valid moves, skip turn
 
 TODO:
-- if no (more) valid moves, skip turn
 - AI opponent:
 	- on player 2 turn
 	- automatically roll dice 
