@@ -39,5 +39,6 @@ Optional:
 - optimization?
 - exceptions?
 - manual deletion of things, at least the AI thread maybe?
+- more expressive UI ?
 
 *note: top right is indexed 0, top left 11, bottom left 12, bottom right 23 (so move order from white POV)
