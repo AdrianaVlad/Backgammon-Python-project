@@ -4,11 +4,15 @@ import random
 
 
 class BackgammonBoard:
-    def __init__(self, canvas, turn_label, turn):
+    def __init__(self, canvas, turn_label, turn, light_count_label, dark_count_label):
+        self.light_count_label = light_count_label
+        self.dark_count_label = dark_count_label
+        self.light_count = 0
+        self.dark_count = 0
         self.turn_label = turn_label
         self.canvas = canvas
         self.piece_radius = 35
-        self.columns = [[0, 0, 0, 0]] * 24
+        self.columns = [[0, 0, 0, 0]] * 25
         self.selected_piece = None
         self.base_x = 50
         self.base_y = 50
@@ -31,6 +35,7 @@ class BackgammonBoard:
             self.columns[16][2] = 3
             self.columns[18][2] = 5
             self.columns[23][3] = 2
+        self.columns[24] = [self.base_x+700, self.base_y +400, 0 , 0]
 
     def draw_piece(self, x, y, color):
         self.canvas.create_oval(x - self.piece_radius, y - self.piece_radius,
@@ -40,27 +45,52 @@ class BackgammonBoard:
         for i, column in enumerate(self.columns):
             for j in range(column[2]):
                 if i < 12:
-                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] + 2 * (j % 5) * self.piece_radius + self.piece_radius, "#ebddd1")
+                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] + 2 * (j % 5) * self.piece_radius +
+                                    self.piece_radius, "#ebddd1")
+                elif i < 24:
+                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] - 2 * (j % 5) * self.piece_radius -
+                                    self.piece_radius, "#ebddd1")
                 else:
-                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] - 2 * (j % 5) * self.piece_radius - self.piece_radius, "#ebddd1")
+                    self.draw_piece(column[0] + self.piece_radius * (j // 5) / 2,
+                                    column[1] - 2 * (j % 5) * self.piece_radius - self.piece_radius, "#ebddd1")
             for j in range(column[3]):
                 if i < 12:
-                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] + 2 * (j % 5) * self.piece_radius + self.piece_radius, "#25190e")
+                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] + 2 * (j % 5) * self.piece_radius +
+                                    self.piece_radius, "#25190e")
+                elif i < 24:
+                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] - 2 * (j % 5) * self.piece_radius -
+                                    self.piece_radius, "#25190e")
                 else:
-                    self.draw_piece(column[0]+self.piece_radius*(j//5)/2, column[1] - 2 * (j % 5) * self.piece_radius - self.piece_radius, "#25190e")
+                    self.draw_piece(column[0] + self.piece_radius * (j // 5) / 2,
+                                    column[1] + 2 * (j % 5) * self.piece_radius + self.piece_radius, "#25190e")
 
     def handle_click(self, event):
         clicked_x, clicked_y = event.x, event.y
         clicked_column = self.get_clicked_column(clicked_x, clicked_y)
         if len(self.dice) > 0:
             if self.selected_piece is None:
-                if self.columns[clicked_column][self.turn+1] > 0:
-                    self.selected_piece = clicked_column
-                    self.turn_label.config(text=f"Player {self.turn}'s Turn. Selected col {clicked_column}")
+                if (clicked_column is not None and self.columns[clicked_column][self.turn + 1] > 0 and
+                        (self.columns[24][self.turn+1] == 0 or clicked_column == 24)):
+                        self.selected_piece = clicked_column
+                        self.turn_label.config(text=f"Player {self.turn}'s Turn. Selected col {clicked_column}")
             else:
                 if self.valid_move(clicked_column):
-                    self.columns[self.selected_piece][self.turn+1] -= 1
-                    self.columns[clicked_column][self.turn+1] += 1
+                    if clicked_column is None:
+                        if self.turn == 1:
+                            self.light_count += 1
+                            self.light_count_label.config(text=f"W x {self.light_count}")
+                        else:
+                            self.dark_count += 1
+                            self.dark_count_label.config(text=f"B x {self.dark_count}")
+                    else:
+                        if self.turn == 1 and self.columns[clicked_column][3] == 1:
+                            self.columns[clicked_column][3] = 0
+                            self.columns[24][3] += 1
+                        elif self.turn == 2 and self.columns[clicked_column][2] == 1:
+                            self.columns[clicked_column][2] = 0
+                            self.columns[24][2] += 1
+                        self.columns[clicked_column][self.turn+1] += 1
+                    self.columns[self.selected_piece][self.turn + 1] -= 1
                     self.selected_piece = None
                     if len(self.dice) == 0:
                         self.turn = self.turn % 2 + 1
@@ -68,21 +98,57 @@ class BackgammonBoard:
             self.redraw_board()
 
     def valid_move(self, clicked_column):
+        if clicked_column is None:
+            if self.turn == 1:
+                for i in range(18):
+                    if self.columns[i][2] != 0:
+                        return False
+            else:
+                for i in range(18):
+                    if self.columns[i+6][3] != 0:
+                        return False
+        if clicked_column == 24:
+            return False
         if self.turn == 1:
-            if self.columns[clicked_column][3] != 0:
+            if clicked_column is not None and self.columns[clicked_column][3] > 1:
                 return False
-            move = clicked_column - self.selected_piece
+            if clicked_column is None:
+                if 24 - self.selected_piece in self.dice:
+                    self.dice.remove(24 - self.selected_piece)
+                    return True
+                for i in range(24 - self.selected_piece, 6):
+                    if self.columns[23-i][2] != 0:
+                        return False
+                max_dice = max(self.dice)
+                if max_dice > 24 - self.selected_piece:
+                    self.dice.remove(max_dice)
+                    return True
+                return False
+            move = clicked_column - self.selected_piece % 24 + self.selected_piece // 24
             if move in self.dice:
                 self.dice.remove(move)
                 return True
             return False
         else:
-            if self.columns[clicked_column][2] != 0:
+            if clicked_column is not None and self.columns[clicked_column][2] > 1:
                 return False
-            move = self.selected_piece - clicked_column
-            if move in self.dice:
-                self.dice.remove(move)
-                return True
+            if clicked_column is None:
+                if self.selected_piece+1 in self.dice:
+                    self.dice.remove(self.selected_piece+1)
+                    return True
+                for i in range(self.selected_piece+1, 6):
+                    if self.columns[i][3] != 0:
+                        return False
+                max_dice = max(self.dice)
+                if max_dice > self.selected_piece+1:
+                    self.dice.remove(max_dice)
+                    return True
+                return False
+            else:
+                move = self.selected_piece - clicked_column
+                if move in self.dice:
+                    self.dice.remove(move)
+                    return True
             return False
 
     def redraw_board(self):
@@ -121,15 +187,19 @@ class BackgammonBoard:
                                        (x_left + x_right) / 2 + 710, y_bottom_tip, outline="#654426", fill=fill_color_bottom)
 
     def get_clicked_column(self, x_coord, y_coord):
-        if self.base_y+30 < y_coord < self.base_y + 370:
+        if self.base_y+30 <= y_coord <= self.base_y + 400:
             for i in range(12):
                 if abs(self.columns[i][0]-x_coord) <= 47:
                     return i
-        else:
+            if abs(self.columns[24][0] - x_coord) <= 47:
+                return 24
+        elif self.base_y + 400 < y_coord <= self.base_y + 770:
             for i in range(12):
                 if abs(self.columns[i+12][0] - x_coord) <= 47:
                     return i+12
-        return -1
+            if abs(self.columns[24][0] - x_coord) <= 47:
+                return 24
+        return None
 
 
 def roll_dice(result_label, backgammon_board):
@@ -210,7 +280,7 @@ def start_game(game_mode, preliminary_rolls, root, starting_player):
 
     canvas = tk.Canvas(game_window, bg="#f5eee8", highlightthickness=0)
     canvas.pack(expand=True, fill=tk.BOTH)
-    backgammon_board = BackgammonBoard(canvas, turn_label, starting_player)
+    backgammon_board = BackgammonBoard(canvas, turn_label, starting_player, light_count_label, dark_count_label)
     canvas.bind("<Button-1>", backgammon_board.handle_click)
     backgammon_board.draw_board()
     backgammon_board.place_pieces()

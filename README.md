@@ -12,10 +12,6 @@ Features:
 - stack pieces on space if > 5 (so they don't overlap with the space below/above)
 - double dice: ex: if player rolls '3 3' they can move 3 spaces 4 times
 - roll to determine who goes first (still, player 1 will play white and 2 black, but now player 1 always goes first)
-
-
-TODO:
-
 - taking pieces functionality
 	- place your piece if only one opponent piece on space
 	- place taken piece in the middle of the board
@@ -24,6 +20,12 @@ TODO:
 - bearing off functionality:
 	- if no pieces outside of your house, can take pieces out of the board
 	- update 'borne off' label for respective color
+	- can make 'normal' moves from higher pieces if the column coresponding to the dice roll is empty
+	- if column empty but no higher pieces, can only remove highest lower piece(s) (using highest dice roll)
+
+
+TODO:
+- if no (more) valid moves, skip turn
 - win functionality:
 	- if all pieces borne off, display winner
 	- back to main menu button on win screen
