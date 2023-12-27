@@ -1,11 +1,42 @@
 import tkinter as tk
 import tkinter.font as tkf
 import random
+import threading
+import time
+
+class AIPlayer:
+    def __init__(self, backgammon_board, result_label):
+        self.backgammon_board = backgammon_board
+        self.result_label = result_label
+        self.ai_thread = None
+
+    def ai_turn(self):
+        while True:
+            if self.backgammon_board.turn == 2:
+                if len(self.backgammon_board.dice) == 0:
+                    self.roll_dice()
+                self.make_move()
+            time.sleep(0.1)
+
+    def roll_dice(self):
+        time.sleep(1)
+        roll_dice(self.result_label, self.backgammon_board)
+    def make_move(self):
+        move = self.backgammon_board.valid_move_exists()
+        time.sleep(1)
+        self.backgammon_board.decide_action(move[2])
+        time.sleep(1)
+        self.backgammon_board.decide_action(move[1])
+
+    def start_ai_thread(self):
+        if self.ai_thread is None or not self.ai_thread.is_alive():
+            self.ai_thread = threading.Thread(target=self.ai_turn)
+            self.ai_thread.start()
 
 
 class BackgammonBoard:
     def __init__(self, canvas, turn_label, turn, light_count_label, dark_count_label, game_window):
-        self.game_window=game_window
+        self.game_window = game_window
         self.light_count_label = light_count_label
         self.dark_count_label = dark_count_label
         self.light_count = 0
@@ -68,8 +99,11 @@ class BackgammonBoard:
     def handle_click(self, event):
         clicked_x, clicked_y = event.x, event.y
         clicked_column = self.get_clicked_column(clicked_x, clicked_y)
+        self.decide_action(clicked_column)
+
+    def decide_action(self, clicked_column):
         if len(self.dice) > 0:
-            if self.valid_move_exists():
+            if self.valid_move_exists()[0]:
                 if self.selected_piece is None:
                     if (clicked_column is not None and self.columns[clicked_column][self.turn + 1] > 0 and
                             (self.columns[24][self.turn+1] == 0 or clicked_column == 24)):
@@ -161,17 +195,17 @@ class BackgammonBoard:
     def valid_move_exists(self):
         if self.columns[24][self.turn+1] != 0:
             for i in range(24):
-                if self.valid_move(i, 24)[1]:
-                    return True
+                if self.valid_move(i, 24)[0]:
+                    return True, i, 24
         else:
             for i in range(24):
                 if self.columns[i][self.turn+1] != 0:
                     for j in range(24):
-                        if self.valid_move(j, i):
-                            return True
-                    if self.valid_move(None, i)[1]:
-                        return True
-        return False
+                        if self.valid_move(j, i)[0]:
+                            return True, j, i
+                    if self.valid_move(None, i)[0]:
+                        return True, None, i
+        return False, None, None
 
 
 
@@ -253,10 +287,13 @@ def check_who_starts(result_label_1, result_label_2, winner_label, root, dice_fr
             if i.isdigit():
                 rolls_2.append(int(i))
 
-        if sum(rolls_1) == sum(rolls_2):
+        if sum(rolls_1)-1 == sum(rolls_2)-2:
             winner_label.config(text="Roll again!")
             result_label_1.config(text="Player 1: ")
-            result_label_2.config(text="Player 2: ")
+            if game_mode == 2:
+                result_label_2.config(text="Player 2: ")
+            else:
+                roll_turn(result_label_2, 2)
         else:
             winner = 1 if sum(rolls_1) > sum(rolls_2) else 2
             winner_label.config(text=f"Player {winner} wins!")
@@ -320,6 +357,10 @@ def start_game(game_mode, preliminary_rolls, starting_player):
     canvas.bind("<Button-1>", backgammon_board.handle_click)
     backgammon_board.draw_board()
     backgammon_board.place_pieces()
+    if game_mode == 1:
+        AI_player = AIPlayer(backgammon_board, result_label)
+        AI_player.start_ai_thread()
+
 
 def preliminary_rolls(game_mode, start_menu):
     start_menu.destroy()
@@ -341,12 +382,15 @@ def preliminary_rolls(game_mode, start_menu):
     roll_button_1.pack(pady=10)
     result_label_2 = tk.Label(dice_frame, text="Player2: ", bg="#654426", fg="#f5eee8", font=("Eras Medium ITC", 50))
     result_label_2.pack(pady=10)
-    roll_button_2 = tk.Button(dice_frame, text="Roll Dice", bg="#90663f", fg="#f5eee8",
-                              command=lambda: (roll_turn(result_label_2, 2),
-                                               check_who_starts(result_label_1, result_label_2, winner_label, root,
-                                                                dice_frame, game_mode)),
-                                               font=("Eras Medium ITC", 20))
-    roll_button_2.pack(pady=10)
+    if game_mode == 2:
+        roll_button_2 = tk.Button(dice_frame, text="Roll Dice", bg="#90663f", fg="#f5eee8",
+                                  command=lambda: (roll_turn(result_label_2, 2),
+                                                   check_who_starts(result_label_1, result_label_2, winner_label, root,
+                                                                    dice_frame, game_mode)),
+                                                   font=("Eras Medium ITC", 20))
+        roll_button_2.pack(pady=10)
+    else:
+        roll_turn(result_label_2, 2)
 
 
 

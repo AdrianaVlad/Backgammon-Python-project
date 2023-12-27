@@ -26,12 +26,18 @@ Features:
 	- if a player bears off all pieces, display winner
 	- back to main menu button on win screen
 - if no (more) valid moves, skip turn
-
-TODO:
 - AI opponent:
 	- on player 2 turn
 	- automatically roll dice 
 	- make (any) valid moves until all moves are used
+
+TODO:
 - documentation
+
+Optional:
+- more testing
+- optimization?
+- exceptions?
+- manual deletion of things, at least the AI thread maybe?
 
 *note: top right is indexed 0, top left 11, bottom left 12, bottom right 23 (so move order from white POV)
