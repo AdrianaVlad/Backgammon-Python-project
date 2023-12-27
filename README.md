@@ -22,13 +22,12 @@ Features:
 	- update 'borne off' label for respective color
 	- can make 'normal' moves from higher pieces if the column coresponding to the dice roll is empty
 	- if column empty but no higher pieces, can only remove highest lower piece(s) (using highest dice roll)
-
-
-TODO:
-- if no (more) valid moves, skip turn
 - win functionality:
 	- if all pieces borne off, display winner
 	- back to main menu button on win screen
+
+TODO:
+- if no (more) valid moves, skip turn
 - AI opponent:
 	- on player 2 turn
 	- automatically roll dice 
