@@ -30,8 +30,6 @@ Features:
 	- on player 2 turn
 	- automatically roll dice 
 	- make (any) valid moves until all moves are used
-
-TODO:
 - documentation
 
 Optional:

@@ -6,13 +6,60 @@ import time
 
 
 class AIPlayer:
+    """
+    A class used to represent the AI player for the single player mode.
+
+    ...
+
+    Attributes
+    ----------
+    backgammon_board : BackgammonBoard
+        the current game environment
+    result_label : tkinter.Label
+        holds the results of a dice roll
+    ai_thread : threading.Thread
+        in which the main loop should run
+
+    Methods
+    -------
+    ai_turn()
+        Continuously runs the AI, waiting for its turn to take action.
+    roll_dice()
+        Simulates dice roll, with delay to be readable to the human player.
+    make_move()
+        Simulates piece selection and movement, with delay to be readable to the human player.
+    start_ai_thread()
+        Creates ai_thread and runs ai_turn on it.
+    """
+
     def __init__(self, backgammon_board, result_label):
+        """
+        Provides all the necessary attributes to simulate actions.
+
+        Parameters
+        ----------
+        backgammon_board : BackgammonBoard
+            the current game environment, to access properties and simulate actions
+        result_label : tkinter.Label
+            holds the results of a dice roll, to simulate roll
+        """
+
         self.backgammon_board = backgammon_board
         self.result_label = result_label
         self.ai_thread = None
 
     def ai_turn(self):
+        """
+        Continuously runs the AI, waiting for its turn to take action.
+
+        Returns
+        -------
+        None
+        """
+
         while True:
+            if self.backgammon_board.light_count == 15 or self.backgammon_board.dark_count == 15:
+                break
             if self.backgammon_board.turn == 2:
                 if len(self.backgammon_board.dice) == 0:
                     self.roll_dice()
@@ -20,10 +67,26 @@ class AIPlayer:
             time.sleep(0.1)
 
     def roll_dice(self):
+        """
+        Simulates dice roll, with delay to be readable to the human player.
+
+        Returns
+        -------
+        None
+        """
+
         time.sleep(1)
         roll_dice(self.result_label, self.backgammon_board)
 
     def make_move(self):
+        """
+        Simulates piece selection and movement, with delay to be readable to the human player.
+
+        Returns
+        -------
+        None
+        """
+
         move = self.backgammon_board.valid_move_exists()
         time.sleep(1)
         self.backgammon_board.decide_action(move[2])
@@ -31,13 +94,101 @@ class AIPlayer:
         self.backgammon_board.decide_action(move[1])
 
     def start_ai_thread(self):
+        """
+        Creates ai_thread and runs ai_turn() on it.
+
+        Preferred to running ai_turn() directly, as that may lag or freeze the game.
+
+        Returns
+        -------
+        None
+        """
+
         if self.ai_thread is None or not self.ai_thread.is_alive():
             self.ai_thread = threading.Thread(target=self.ai_turn)
             self.ai_thread.start()
 
 
 class BackgammonBoard:
+    """
+    A class used to represent the Backgammon Board with all its logic.
+
+    ...
+
+    Attributes
+    ----------
+    canvas : tkinter.Canvas
+        the visuals of the board, including pieces
+    turn_label : tkinter.Label
+        displays whose turn it is, with additional messages to the player(s)
+    turn : int
+        index of the player who / must make a move, 1 or 2
+    light_count_label : tkinter.Label
+        displays how many pieces player 1 bore off
+    dark_count_label : tkinter.Label
+        displays how many pieces player 2 bore off
+    game_window : tkinter.Frame
+        contains all the information of the game screen, to be deleted on win screen transition
+    light_count : int
+        number of pieces borne off by player 1
+    dark_count : int
+        number of pieces borne off by player 2
+    piece_radius : int
+        radius of a checkers piece
+    columns : list[list[int]]
+        holds the coordinates and number of pieces of each color on each space on the board
+    selected_piece : int
+        the index of the column from which a piece was selected
+    base_x : int
+        base x coordinate, relative to starting point of the element in the frame, where the canvas will be drawn
+    base_y : int
+        base x coordinate, relative to starting point of the element in the frame, where the canvas will be drawn
+    dice : list[int]
+        list of remaining move distances, based on rolled dice and moves already made
+    Methods
+    -------
+    draw_piece(x, y, color):
+        Draws one circular checker piece at the specified x and y coordinates, in the specified color.
+    place_pieces():
+        (re)Places all pieces on the board, according to their last saved position.
+    handle_click():
+        Handles left mouse button click event from player(s).
+    decide_action():
+        Decides what action to take on click event.
+    valid_move(clicked_column, selected_piece):
+        Decides whether moving selected_piece to clicked_column is a valid move.
+    valid_move_exists():
+        Decides if there are any possible valid moves left in the current game state.
+    redraw_board():
+        Redraws all elements of the board, including pieces.
+    draw_board():
+        Draws the board itself: border, background, triangles.
+    get_clicked_column(x_coord, y_coord):
+        Decides which column / space corresponds to the given coordinates, if any.
+    """
+
     def __init__(self, canvas, turn_label, turn, light_count_label, dark_count_label, game_window):
+        """
+        Provides all the necessary attributes to simulate a backgammon game board.
+
+        Sets the initial piece positions and the column coordinates.
+
+        Parameters
+        ----------
+        canvas : tkinter.Canvas
+            the visuals of the board, including pieces
+        turn_label : tkinter.Label
+            displays whose turn it is, with additional messages to the player(s)
+        turn : int
+            index of the player who / must make a move, 1 or 2
+        light_count_label : tkinter.Label
+            displays how many pieces player 1 bore off
+        dark_count_label : tkinter.Label
+            displays how many pieces player 2 bore off
+        game_window : tkinter.Frame
+            contains all the information of the game screen, to be deleted on win screen transition
+        """
+
         self.game_window = game_window
         self.light_count_label = light_count_label
         self.dark_count_label = dark_count_label
@@ -72,10 +223,35 @@ class BackgammonBoard:
         self.columns[24] = [self.base_x+700, self.base_y + 400, 0, 0]
 
     def draw_piece(self, x, y, color):
+        """
+        Draws one circular checker piece at the specified x and y coordinates, in the specified color.
+
+        Parameters
+        ----------
+        x : int
+            x coordinate of the center of the piece
+        y : int
+            y coordinate of the center of the piece
+        color : string
+            color code to fill the circle
+
+        Returns
+        -------
+        None
+        """
+
         self.canvas.create_oval(x - self.piece_radius, y - self.piece_radius,
                                 x + self.piece_radius, y + self.piece_radius, fill=color)
 
     def place_pieces(self):
+        """
+        (re)Places all pieces on the board, according to their last saved position.
+
+        Returns
+        -------
+        None
+        """
+
         for i, column in enumerate(self.columns):
             for j in range(column[2]):
                 if i < 12:
@@ -99,11 +275,41 @@ class BackgammonBoard:
                                     column[1] + 2 * (j % 5) * self.piece_radius + self.piece_radius, "#25190e")
 
     def handle_click(self, event):
+        """
+        Handles left mouse button click event from player(s).
+
+        Parameters
+        ----------
+        event : Event
+            left mouse button click event on the canvas
+
+        Returns
+        -------
+        None
+        """
+
         clicked_x, clicked_y = event.x, event.y
         clicked_column = self.get_clicked_column(clicked_x, clicked_y)
         self.decide_action(clicked_column)
 
     def decide_action(self, clicked_column):
+        """
+        Decides what action to take on click event.
+
+        If no selected piece, set clicked column as selected. If piece already selected check if move is valid.
+        If move is not valid, let the player know. If player has no more valid moves, let the player know.
+        Change turns and declare winner when viable.
+
+        Parameters
+        ----------
+        clicked_column : int
+            index of the clicked column, 0 to 24
+
+        Returns
+        -------
+        None
+        """
+
         if len(self.dice) > 0:
             if self.valid_move_exists()[0]:
                 if self.selected_piece is None:
@@ -147,6 +353,24 @@ class BackgammonBoard:
                 self.turn_label.config(text=f"No more valid moves! Player {self.turn}'s Turn")
 
     def valid_move(self, clicked_column, selected_piece):
+        """
+        Decides whether moving selected_piece to clicked_column is a valid move.
+
+        It respects all the original rules of the game. It also returns which dice move was used, so that it can be
+        removed from the list.
+
+        Parameters
+        ----------
+        clicked_column : int, optional
+            index of the clicked column, 0 to 24, or None if outside the board
+        selected_piece : int
+            the index of the column from which a piece was selected
+
+        Returns
+        -------
+        (bool, int)
+        """
+
         if clicked_column is None:
             if self.turn == 1:
                 for i in range(18):
@@ -195,6 +419,16 @@ class BackgammonBoard:
             return False, None
 
     def valid_move_exists(self):
+        """
+        Decides if there are any possible valid moves left in the current game state.
+
+        It respects all the original rules of the game. All moves are checked from lowest to highest index.
+        Returns bool, clicked_column and selected_piece, in that order.
+
+        Returns
+        -------
+        (bool, int, int)
+        """
         if self.columns[24][self.turn+1] != 0:
             for i in range(24):
                 if self.valid_move(i, 24)[0]:
@@ -210,11 +444,27 @@ class BackgammonBoard:
         return False, None, None
 
     def redraw_board(self):
+        """
+        Redraws all elements of the board, including pieces.
+
+        Returns
+        -------
+        None
+        """
+
         self.canvas.delete("all")
         self.draw_board()
         self.place_pieces()
 
     def draw_board(self):
+        """
+        Draws the board itself: border, background, triangles.
+
+        Returns
+        -------
+        None
+        """
+
         self.canvas.create_rectangle(self.base_x, self.base_y, self.base_x + 1400, self.base_y + 800,
                                      outline="#654426", fill="#90663f")
         self.canvas.create_rectangle(self.base_x + 30, self.base_y + 30, self.base_x + 660, self.base_y + 770,
@@ -246,6 +496,13 @@ class BackgammonBoard:
                                        fill=fill_color_bottom)
 
     def get_clicked_column(self, x_coord, y_coord):
+        """
+        Decides which column / space corresponds to the given coordinates, if any.
+
+        Returns
+        -------
+        int
+        """
         if self.base_y+30 <= y_coord <= self.base_y + 400:
             for i in range(12):
                 if abs(self.columns[i][0]-x_coord) <= 47:
@@ -262,6 +519,21 @@ class BackgammonBoard:
 
 
 def roll_dice(result_label, backgammon_board):
+    """
+    Rolls two dice during a game, displaying the resulting integers and updating the values for environment logic.
+
+    Parameters
+    ----------
+    result_label : tkinter.Label
+        holds the results of a dice roll
+    backgammon_board : BackgammonBoard
+        the current game environment
+
+    Returns
+    -------
+    None
+    """
+
     if len(backgammon_board.dice) == 0:
         dice_value_1 = random.randint(1, 6)
         dice_value_2 = random.randint(1, 6)
@@ -273,6 +545,21 @@ def roll_dice(result_label, backgammon_board):
 
 
 def roll_turn(result_label, player_nr):
+    """
+    Rolls two dice for preliminary rolls, displaying the resulting integers.
+
+    Parameters
+    ----------
+    result_label : tkinter.Label
+        holds the results of a dice roll
+    player_nr : int
+        the index of the rolling player
+
+    Returns
+    -------
+    None
+    """
+
     if len(result_label.cget("text")) <= 10:
         dice_value_1 = random.randint(1, 6)
         dice_value_2 = random.randint(1, 6)
@@ -280,6 +567,28 @@ def roll_turn(result_label, player_nr):
 
 
 def check_who_starts(result_label_1, result_label_2, winner_label, dice_frame, game_mode):
+    """
+    Rolls two dice for preliminary rolls, displaying the resulting integers.
+
+    Parameters
+    ----------
+    result_label_1 : tkinter.Label
+        holds the results of player 1's dice roll
+    result_label_2 : tkinter.Label
+        holds the results of player 2's dice roll
+    winner_label : tkinter.Label
+        holds the results of the preliminary rolls
+    dice_frame : tkinter.Frame
+        holds all preliminary screen information, for deletion on screen transition
+    game_mode : int
+        number of human players, 1 or 2, for propagation on screen transition
+
+
+    Returns
+    -------
+    None
+    """
+
     if len(result_label_1.cget("text")) > 10 and len(result_label_2.cget("text")) > 10:
         rolls_1 = []
         for i in result_label_1.cget("text"):
@@ -304,11 +613,41 @@ def check_who_starts(result_label_1, result_label_2, winner_label, dice_frame, g
 
 
 def deselect_piece(backgammon_board):
+    """
+    Deselects piece during a turn, to avoid getting stuck.
+
+    Parameters
+    ----------
+    backgammon_board : BackgammonBoard
+        the current game environment
+
+    Returns
+    -------
+    None
+    """
+
     backgammon_board.selected_piece = None
     backgammon_board.turn_label.config(text=f"Player {backgammon_board.turn}'s Turn")
 
 
 def win_screen(game_window, winner):
+    """
+    Generates UI of win screen when a player finishes the game.
+
+    Displays who won and a back to main menu button.
+
+    Parameters
+    ----------
+    game_window : tkinter.Frame
+        holds all the content of the previous screen, for deletion
+    winner : int
+        the index of the winning player, 1 or 2
+
+    Returns
+    -------
+    None
+    """
+
     game_window.destroy()
     win_frame = tk.Frame(root, bg="#654426")
     win_frame.pack(fill=tk.BOTH, expand=True)
@@ -321,6 +660,26 @@ def win_screen(game_window, winner):
 
 
 def start_game(game_mode, preliminary_frame, starting_player):
+    """
+    Generates UI of game screen after turns are decided.
+
+    Displays whose turn it is, the game board, rolled dice values and number of borne off pieces per player.
+    Offers dice roll and piece deselect buttons.
+
+    Parameters
+    ----------
+    game_mode : int
+        number of human players, 1 or 2
+    preliminary_frame : tkinter.Frame
+        holds all the content of the previous screen, for deletion
+    starting_player : int
+        index of player who goes first, 1 or 2
+
+    Returns
+    -------
+    None
+    """
+
     preliminary_frame.destroy()
     game_window = tk.Frame(root, bg="#f5eee8")
     game_window.pack(fill=tk.BOTH, expand=True)
@@ -369,6 +728,24 @@ def start_game(game_mode, preliminary_frame, starting_player):
 
 
 def preliminary_rolls(game_mode, start_menu):
+    """
+    Generates UI of game screen where turns are decided.
+
+    Displays each player's rolls, buttons to roll and whp the winner is. Transitions to next screen after 3 seconds.
+    If players roll the same sum of dice, values are reset.
+
+    Parameters
+    ----------
+    game_mode : int
+        number of human players, 1 or 2
+    start_menu : tkinter.Frame
+        holds all the content of the previous screen, for deletion
+
+    Returns
+    -------
+    None
+    """
+
     start_menu.destroy()
     dice_frame = tk.Frame(root, bg="#654426")
     dice_frame.pack(fill=tk.BOTH, expand=True)
@@ -399,7 +776,20 @@ def preliminary_rolls(game_mode, start_menu):
         roll_turn(result_label_2, 2)
 
 
-def create_start_menu(win_frame):
+def create_start_menu(win_frame=None):
+    """
+    Generates UI of main menu screen, where players can decide between the 2 game modes
+
+    Parameters
+    ----------
+    win_frame: tkinter.Frame, optional
+        holds all the content of the previous screen, if any, for deletion
+
+    Returns
+    -------
+    None
+    """
+
     if win_frame is not None:
         win_frame.destroy()
     start_menu = tk.Frame(root, bg="#654426")
@@ -426,5 +816,5 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Backgammon")
     root.geometry("1920x1080")
-    create_start_menu(None)
+    create_start_menu()
     root.mainloop()
