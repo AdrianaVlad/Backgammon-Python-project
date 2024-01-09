@@ -429,19 +429,23 @@ class BackgammonBoard:
         -------
         (bool, int, int)
         """
+        valid_moves = []
         if self.columns[24][self.turn+1] != 0:
             for i in range(24):
                 if self.valid_move(i, 24)[0]:
-                    return True, i, 24
+                    valid_moves.append((i, 24))
         else:
             for i in range(24):
                 if self.columns[i][self.turn+1] != 0:
                     for j in range(24):
                         if self.valid_move(j, i)[0]:
-                            return True, j, i
+                            valid_moves.append((j, i))
                     if self.valid_move(None, i)[0]:
-                        return True, None, i
-        return False, None, None
+                        valid_moves.append((None, i))
+        if len(valid_moves) == 0:
+            return False, None, None
+        move = random.choice(valid_moves)
+        return True, move[0], move[1]
 
     def redraw_board(self):
         """
